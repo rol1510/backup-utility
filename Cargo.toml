@@ -10,3 +10,4 @@ clap = { version = "3.2.20", features = ["derive"] }
 serde = "1.0.144"
 serde_derive = "1.0.144"
 toml = "0.5.9"
+wax = "0.5.0"

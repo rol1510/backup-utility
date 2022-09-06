@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use clap::Command;
 use serde_derive::Deserialize;
+use wax::{CandidatePath, Glob, Pattern};
 
 const CONFIG_FILE_PATH: &str = "./config.toml";
 
@@ -43,7 +44,7 @@ fn preview() {
 
     config.units.into_iter().for_each(|item: Unit| {
         println!("\nUnit {:?}", item.base);
-        let files = get_all_files(&item.base);
+        let files = get_all_files_filtered(&item);
         println!("{:#?}", files);
     });
 }
@@ -53,7 +54,7 @@ fn copy(dest: &PathBuf) {
 
     config.units.into_iter().for_each(|unit: Unit| {
         println!("\nUnit {:?}", &unit.base);
-        get_all_files(&unit.base)
+        get_all_files_filtered(&unit)
             .into_iter()
             .map(|path| {
                 match rebase_path_and_insert(&path, &unit.base, dest, &unit.output_dir_name) {
@@ -124,6 +125,44 @@ fn test_rebase_path_and_insert() {
         ),
         Some(PathBuf::from("./foo/b/c/"))
     );
+}
+
+fn is_match(path: &PathBuf, filters: &Vec<Glob>) -> bool {
+    for glob in filters {
+        if glob.is_match(CandidatePath::from(path.as_path())) {
+            return true;
+        }
+    }
+    return false;
+}
+
+fn get_all_files_filtered(unit: &Unit) -> Vec<PathBuf> {
+    let files = get_all_files(&unit.base);
+
+    let files = match &unit.exclude {
+        None => files,
+        Some(patterns) => {
+            let filters = patterns
+                .into_iter()
+                .map(|item| {
+                    return Glob::new(&item).unwrap();
+                })
+                .collect();
+
+            files
+                .into_iter()
+                .filter_map(|path| {
+                    if is_match(&path, &filters) {
+                        None
+                    } else {
+                        Some(path)
+                    }
+                })
+                .collect()
+        }
+    };
+
+    return files;
 }
 
 fn get_all_files(path: &PathBuf) -> Vec<PathBuf> {
