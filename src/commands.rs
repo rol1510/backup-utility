@@ -44,3 +44,25 @@ pub fn copy(dest: &PathBuf) {
             });
     });
 }
+
+pub fn link(dest: &PathBuf) {
+    let config = read_config();
+
+    config.units.into_iter().for_each(|unit: Unit| {
+        println!("\nUnit {:?}", &unit.base);
+        get_all_files_filtered(&unit)
+            .into_iter()
+            .map(|path| {
+                match rebase_path_and_insert(&path, &unit.base, dest, &unit.output_dir_name) {
+                    Some(new_path) => (path, new_path),
+                    None => panic!("could not rebase path!"),
+                }
+            })
+            .for_each(|(from_path, to_path)| {
+                print!("  link {:?} -> {:?}", from_path, to_path);
+                fs::create_dir_all(to_path.parent().unwrap()).expect("Could not create directory");
+                fs::hard_link(&from_path, &to_path).expect("Could not copy file");
+                println!(" \tdone");
+            });
+    });
+}

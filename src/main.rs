@@ -1,23 +1,37 @@
 use std::ffi::OsString;
 use std::path::PathBuf;
 
+use clap::arg;
 use clap::Command;
 use colored::control;
 
-use commands::{copy, preview, show};
+use commands::{copy, link, preview, show};
 
 mod commands;
 mod lib;
 
+pub const ABOUT_STRING: &str = "\
+Make the computer collect your important files for backups.\n\n\
+Use <subcommand> --help to get info on the usage of the subcommand";
+
 fn cli() -> Command<'static> {
     Command::new("backup-utility")
-        .about("Make the computer collect your important files for backups.")
+        .about(ABOUT_STRING)
         .subcommand_required(true)
         .arg_required_else_help(true)
         .allow_external_subcommands(true)
         .subcommand(Command::new("show").about("show the config file"))
         .subcommand(Command::new("preview").about("preview what files will be included"))
-        .subcommand(Command::new("copy").about("do something"))
+        .subcommand(
+            Command::new("copy")
+                .about("copy all files into the specified path")
+                .arg(arg!(<PATH> "The path to the output directory")),
+        )
+        .subcommand(
+            Command::new("link")
+                .about("like copy, but will create hard links")
+                .arg(arg!(<PATH> "The path to the output directory")),
+        )
 }
 
 fn main() {
@@ -34,7 +48,12 @@ fn main() {
             preview();
         }
         Some(("copy", _sub_matches)) => {
-            copy(&PathBuf::from("R:/tmp/"));
+            let path = _sub_matches.get_one::<String>("PATH").unwrap();
+            copy(&PathBuf::from(path));
+        }
+        Some(("link", _sub_matches)) => {
+            let path = _sub_matches.get_one::<String>("PATH").unwrap();
+            link(&PathBuf::from(path));
         }
         Some((ext, sub_matches)) => {
             let args = sub_matches
