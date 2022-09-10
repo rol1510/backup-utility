@@ -2,6 +2,7 @@ use std::ffi::OsString;
 use std::path::PathBuf;
 
 use clap::Command;
+use colored::control;
 
 use commands::{copy, preview, show};
 
@@ -9,8 +10,8 @@ mod commands;
 mod lib;
 
 fn cli() -> Command<'static> {
-    Command::new("git")
-        .about("A fictional versioning CLI")
+    Command::new("backup-utility")
+        .about("Make the computer collect your important files for backups.")
         .subcommand_required(true)
         .arg_required_else_help(true)
         .allow_external_subcommands(true)
@@ -20,6 +21,9 @@ fn cli() -> Command<'static> {
 }
 
 fn main() {
+    // This is needed for the colored terminal output on Windows.
+    control::set_virtual_terminal(true).unwrap();
+
     let matches = cli().get_matches();
 
     match matches.subcommand() {

@@ -1,10 +1,11 @@
 use std::fs;
 use std::path::PathBuf;
 
+use colored::*;
 use serde_derive::Deserialize;
 use wax::{CandidatePath, Glob, Pattern};
 
-pub const CONFIG_FILE_PATH: &str = "./config.toml";
+pub const CONFIG_FILE_PATH_ENV_KEY: &str = "BU_CONFIG";
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -130,9 +131,28 @@ fn get_all_files(path: &PathBuf) -> Vec<PathBuf> {
     return y.collect();
 }
 
+pub fn get_config_file_location() -> String {
+    match std::env::var(CONFIG_FILE_PATH_ENV_KEY) {
+        Ok(val) => val,
+        Err(e) => {
+            println!(
+                "{}",
+                format!(
+                    "Couldn't get the config file location from '{}'",
+                    CONFIG_FILE_PATH_ENV_KEY
+                )
+                .red()
+                .bold()
+            );
+            println!("Because: {e}");
+            std::process::exit(1);
+        }
+    }
+}
+
 pub fn read_config() -> Config {
-    let config: Config = toml::from_str(&read_file(CONFIG_FILE_PATH)).unwrap();
-    return config;
+    let contents = read_file(&get_config_file_location());
+    toml::from_str(&contents).unwrap()
 }
 
 fn read_file(path: &str) -> String {

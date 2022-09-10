@@ -3,12 +3,10 @@ use std::path::PathBuf;
 
 use colored::*;
 
-use crate::lib::{
-    get_all_files_filtered, read_config, rebase_path_and_insert, Unit, CONFIG_FILE_PATH,
-};
+use crate::lib::*;
 
 pub fn show() {
-    println!("showing file {}", CONFIG_FILE_PATH.cyan());
+    println!("showing file {}", get_config_file_location().cyan());
 
     let config = read_config();
 
