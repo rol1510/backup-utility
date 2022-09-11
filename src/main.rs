@@ -5,9 +5,10 @@ use clap::arg;
 use clap::Command;
 use colored::control;
 
-use commands::{copy, link, preview, show};
+use commands::{copy, info, link, preview, show};
 
 mod commands;
+mod couter;
 mod lib;
 
 pub const ABOUT_STRING: &str = "\
@@ -22,6 +23,7 @@ fn cli() -> Command<'static> {
         .allow_external_subcommands(true)
         .subcommand(Command::new("show").about("show the config file"))
         .subcommand(Command::new("preview").about("preview what files will be included"))
+        .subcommand(Command::new("info").about("shows some info about the units"))
         .subcommand(
             Command::new("copy")
                 .about("copy all files into the specified path")
@@ -46,6 +48,9 @@ fn main() {
         }
         Some(("preview", _sub_matches)) => {
             preview();
+        }
+        Some(("info", _sub_matches)) => {
+            info();
         }
         Some(("copy", _sub_matches)) => {
             let path = _sub_matches.get_one::<String>("PATH").unwrap();
