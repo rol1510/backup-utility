@@ -4,8 +4,10 @@ use std::path::PathBuf;
 use byte_unit;
 use colored::*;
 
-use crate::couter::Counter;
-use crate::lib::*;
+use crate::lib::config::*;
+use crate::lib::counter::Counter;
+use crate::lib::file_annotation::FileAnnotation;
+use crate::lib::path_util::*;
 
 pub fn show() {
     println!("showing file {}", get_config_file_location().cyan());

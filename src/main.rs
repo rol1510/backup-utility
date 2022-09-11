@@ -8,7 +8,6 @@ use colored::control;
 use commands::{copy, info, link, preview, show};
 
 mod commands;
-mod couter;
 mod lib;
 
 pub const ABOUT_STRING: &str = "\
