@@ -18,8 +18,23 @@ pub fn preview() {
 
     config.units.into_iter().for_each(|item: Unit| {
         println!("\nUnit {}", format!("{:?}", item.base).cyan());
-        let files = get_all_files_filtered(&item);
+        let files = get_annotated_files(&item);
+
+        let mut counter = (0, 0);
+        files.iter().for_each(|file| {
+            if let FileAnnotation::Nothing(_) = file {
+                counter.0 += 1;
+            } else if let FileAnnotation::Exclude(_) = file {
+                counter.1 += 1;
+            }
+        });
+
         println!("{:#?}", files);
+        println!(
+            "Included: {} files\nExcluded: {} files",
+            counter.0.to_string().cyan().bold(),
+            counter.1.to_string().cyan().bold()
+        );
     });
 }
 

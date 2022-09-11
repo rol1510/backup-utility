@@ -1,3 +1,4 @@
+use std::fmt;
 use std::fs;
 use std::path::PathBuf;
 
@@ -84,11 +85,32 @@ fn is_match(path: &PathBuf, filters: &Vec<Glob>) -> bool {
     return false;
 }
 
-pub fn get_all_files_filtered(unit: &Unit) -> Vec<PathBuf> {
+pub enum FileAnnotation {
+    Nothing(PathBuf),
+    Exclude(PathBuf),
+}
+
+impl fmt::Debug for FileAnnotation {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                FileAnnotation::Nothing(path) => path.to_str().unwrap().green().bold(),
+                FileAnnotation::Exclude(path) => path.to_str().unwrap().normal(),
+            }
+        )
+    }
+}
+
+pub fn get_annotated_files(unit: &Unit) -> Vec<FileAnnotation> {
     let files = get_all_files(&unit.base);
 
     let files = match &unit.exclude {
-        None => files,
+        None => files
+            .into_iter()
+            .map(|path| FileAnnotation::Nothing(path))
+            .collect(),
         Some(patterns) => {
             let filters = patterns
                 .into_iter()
@@ -99,11 +121,11 @@ pub fn get_all_files_filtered(unit: &Unit) -> Vec<PathBuf> {
 
             files
                 .into_iter()
-                .filter_map(|path| {
+                .map(|path| {
                     if is_match(&path, &filters) {
-                        None
+                        FileAnnotation::Exclude(path)
                     } else {
-                        Some(path)
+                        FileAnnotation::Nothing(path)
                     }
                 })
                 .collect()
@@ -111,6 +133,18 @@ pub fn get_all_files_filtered(unit: &Unit) -> Vec<PathBuf> {
     };
 
     return files;
+}
+
+pub fn get_all_files_filtered(unit: &Unit) -> Vec<PathBuf> {
+    let files = get_annotated_files(&unit);
+
+    files
+        .into_iter()
+        .filter_map(|file| match file {
+            FileAnnotation::Nothing(path) => Some(path),
+            FileAnnotation::Exclude(_) => None,
+        })
+        .collect()
 }
 
 fn get_all_files(path: &PathBuf) -> Vec<PathBuf> {
